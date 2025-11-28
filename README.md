@@ -36,7 +36,30 @@ Linux / macOS：
 ./ai-config push --message "chore: sync"
 ```
 
-> **提示**：若希望任何目录都能运行，可把脚本加入 PATH，例如 `cp ai-config ~/.local/bin/` (Linux) 或在 Windows 使用 `setx PATH`。
+### 安装方式（免 `py` 前缀）
+
+无需额外打包，只要把仓库里的 `ai-config` 脚本放到 PATH 即可直接调用：
+
+- **Linux / macOS**
+  ```bash
+  chmod +x /path/to/repo/ai-config
+  mkdir -p ~/.local/bin
+  ln -sf /path/to/repo/ai-config ~/.local/bin/ai-config
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc  # 首次添加 PATH
+  source ~/.bashrc
+  ai-config --help
+  ```
+- **Windows（PowerShell）**
+  ```powershell
+  New-Item -ItemType Directory -Force "$env:USERPROFILE\\bin"
+  Copy-Item -Force C:\\path\\to\\repo\\ai-config $env:USERPROFILE\\bin\\ai-config.py
+  Set-Content -Path $env:USERPROFILE\\bin\\ai-config.cmd -Value "@echo off`r`npy -3 %USERPROFILE%\\bin\\ai-config.py %*"
+  setx PATH "$env:USERPROFILE\\bin;%PATH%"
+  ai-config --help
+  ```
+  `.cmd` 包装器会自动调用 Python 启动器，因此日常直接输入 `ai-config` 即可。
+
+> 只要保持仓库脚本最新，这两种方式都能在任何终端直接运行 `ai-config`。
 
 ### 常用命令
 
