@@ -1,48 +1,58 @@
 # AI 编程伴侣配置同步需求
 
 ## 1. 背景与目标
-- 统一远程仓库：`http://gitee.com/xkcyy/ai-config.git`，独立于本地任意工程的 Git 仓库。
-- 构建一键命令，将远程配置同步到当前工程目录，使 Claude、Code Cursor 等 AI IDE 即刻共享 commands、skills、prompts 等能力。
-- 解决手工复制慢、易出错的问题，为工程师提供稳定的“AI 编程伴侣”基础设施。
+- 统一远程仓库：`https://github.com/xkcyy/ai-coder-extends.git`，与本地任意工程 Git 仓库解耦。
+- 约定配置根目录：`remote-config/ai/`，包含 `.cursor`、`.claude`，并可扩展更多 IDE 配置。
+- 支持双向流程：一键同步远程配置到本地，以及一键推送本地变更到远程主分支，打造可复用的 AI IDE 配置中心。
 
 ## 2. 范围
-- **包含**：远程仓库读取、`.cursor`/`.claude` 目录同步、基础校验、备份、差异提示、命令日志。
-- **不包含**：远程权限管理、CI/CD 集成、IDE 启动脚本、GUI、其他 IDE 目录（如 `.vscode`）。
+- **包含**：
+  - 远程仓库克隆、差异分析、同步覆盖、干运行、日志提示；
+  - 推送命令：提交并推送到 `origin/main`（可通过参数覆盖仓库、目录、分支、提交信息）；
+  - 本地备份/回滚机制、基础语法校验扩展点；
+  - 跨平台（Windows/macOS/Linux）命令行入口与文档。
+- **不包含**：仓库权限管理、CI/CD 集成、图形界面、`.cursor`/`.claude` 之外的 IDE 目录（待未来扩展）。
 
 ## 3. 用户与典型场景
-- 面向使用 Git 和命令行的开发者，常在多 IDE 之间切换。
-- 典型场景：在任意项目根目录执行 `ai-config sync`，即刻获得最新配置；需要可选参数指定 ref、输出差异或回滚。
+- 面向在多 IDE（Claude、Code Cursor 等）间切换的工程师，尤其是以 Windows 为主的终端用户。
+- 常见操作：
+  1. Windows 用户在项目根执行 `py -3 ai-config sync --dry-run` 预览差异；
+  2. 修改本地配置后，运行 `py -3 ai-config push --message "chore: sync"` 将变更合并进 GitHub 主分支；
+  3. 需要时通过 `ai-config rollback <timestamp>` 快速回滚。
 
 ## 4. 功能需求
-### 4.1 同步命令
-- 默认命令 `ai-config sync`：拉取固定仓库最新配置，写入当前目录。
-- 支持参数：`--ref` 指定分支/标签/commit；`--repo` 覆盖默认仓库；`--target <path>` 指定写入目录。
+### 4.1 同步命令（`ai-config sync`）
+- 默认从 `origin/main` 的 `remote-config/ai/` 拉取 `.cursor`、`.claude`；支持 `--repo`、`--branch`、`--remote-dir`、`--ref` 覆盖。
+- 支持 `--dry-run`、`--force`、`--verbose` 控制行为。
+- 远程目录不存在时提示用户先使用 `push` 初始化。
 
-### 4.2 目录与特性覆盖
-- `.cursor`、`.claude` 及其子目录（commands、skills、prompts、workflows、toolchains 等）全部镜像同步。
-- 不存在的目录自动创建；已删除的远程文件本地同步删除，保持完全一致。
+### 4.2 推送命令（`ai-config push`）
+- 读取本地 `.cursor`、`.claude`，覆盖远程 `remote-config/ai/` 后执行 `git commit` + `git push origin <branch>`。
+- 支持 `--repo`、`--branch`、`--remote-dir`、`--target`、`--message`，默认将提交直接推送到主分支。
+- 若远程无变化则直接退出，避免空提交。
 
-### 4.3 差异与覆盖策略（简化）
-- 同步前检测本地是否存在未提交改动，若有则提示并中止，除非传入 `--force`。
-- 输出简洁差异列表（新增/修改/删除文件），帮助用户快速确认。
+### 4.3 目录与特性覆盖
+- `.cursor`、`.claude` 及其 commands、skills、prompts、workflows、toolchains 等子目录均采用镜像方式同步/推送。
+- 不存在的目录自动创建；远程删除的文件将在本地移除，反之亦然。
 
-### 4.4 干运行与日志（简化）
-- `--dry-run`：仅展示计划操作和差异，不写入磁盘。
-- `--verbose`：打印远程来源、写入路径、耗时；默认仅输出关键节点。
+### 4.4 差异与日志（简化）
+- 输出新增/修改/删除统计信息；`--dry-run` 仅打印计划操作。
+- 默认 INFO 级别日志，`--verbose` 切换为 DEBUG。
 
 ### 4.5 备份与回滚（简化）
-- 每次实际写入前，将现有 `.cursor`、`.claude` 复制到 `.ai-config-backup/<timestamp>`。
-- 提供 `ai-config rollback <timestamp>` 恢复指定快照，机制保持简单的目录复制即可。
+- 每次同步覆盖前，自动备份到 `.ai-config-backup/<timestamp>`。
+- `ai-config rollback <timestamp>` 直接恢复备份快照。
 
 ### 4.6 配置校验（简化）
-- 同步完成后，对关键 JSON/YAML 文件进行语法校验；失败即回滚并提示文件名与错误原因。
+- 预留 JSON/YAML 语法校验钩子，防止损坏 IDE 配置。校验失败即回滚并提示报错文件。
 
 ## 5. 非功能需求
-- **架构**：遵循 SOLID；同步核心、IDE 适配器、校验器、备份器彼此解耦，便于扩展新 IDE。
-- **性能（简化目标）**：首次同步（含克隆）控制在 30 秒内，后续增量同步目标 < 10 秒；采用浅克隆或 `git archive` 降低网络与 I/O。
-- **可观测性**：日志可配置级别，失败返回非零退出码。
+- **架构（SOLID）**：同步器、推送器、备份器、Git 封装、路径校验等模块解耦，便于扩展新 IDE 或新目录。
+- **性能目标**：首次同步（含浅克隆）< 30s，后续增量 < 10s；推送流程在典型 5MB 配置下 < 15s。
+- **可观测性**：日志级别可调，命令失败需返回非零退出码。
+- **跨平台**：不依赖特定 shell，默认命令在 Windows PowerShell/CMD 与 POSIX 终端一致。
 
-## 6. 成功判定与扩展
-- `ai-config sync` 能在任意工程目录完成全量配置同步，并通过基础校验。
-- 具备干运行、差异提示、备份回滚，避免误覆盖。
-- 架构允许未来轻松接入其他 IDE 目录或更复杂校验逻辑。
+## 6. 成功判定与后续扩展
+- `sync` / `push` 命令在默认配置下即可完成远程↔本地双向同步，且具备干运行、备份、回滚能力。
+- README 提供 Windows 与 Linux/macOS 的快速上手指引，降低安装门槛。
+- 架构允许未来扩展 `.vscode`、`.idea` 等 IDE 目录，或接入 CI 流程自动分发配置。

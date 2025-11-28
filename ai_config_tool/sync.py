@@ -10,8 +10,14 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 from .backup import create_backup
-from .constants import DEFAULT_REPO_URL, SUPPORTED_DIRECTORIES
+from .constants import (
+    DEFAULT_BRANCH,
+    DEFAULT_REMOTE_DIR,
+    DEFAULT_REPO_URL,
+    SUPPORTED_DIRECTORIES,
+)
 from .git_utils import clone_repo, has_uncommitted_changes
+from .path_utils import normalize_remote_dir
 
 LOGGER = logging.getLogger(__name__)
 
@@ -62,10 +68,10 @@ def snapshot_paths_only(path: Path) -> List[str]:
     )
 
 
-def build_plan(repo_path: Path, target: Path) -> List[DirectoryPlan]:
+def build_plan(source_root: Path, target: Path) -> List[DirectoryPlan]:
     plans: List[DirectoryPlan] = []
     for directory in SUPPORTED_DIRECTORIES:
-        src = repo_path / directory
+        src = source_root / directory
         dest = target / directory
         if src.exists():
             src_snapshot = snapshot_directory(src)
@@ -153,6 +159,8 @@ def run_sync(
     ref: Optional[str] = None,
     dry_run: bool = False,
     force: bool = False,
+    remote_dir: str = DEFAULT_REMOTE_DIR,
+    branch: str = DEFAULT_BRANCH,
 ) -> None:
     target = target.expanduser().resolve()
     if not target.exists():
@@ -161,11 +169,29 @@ def run_sync(
         raise RuntimeError(
             "Local changes detected in .cursor/.claude. Commit or stash, or rerun with --force."
         )
+    remote_dir_path = normalize_remote_dir(remote_dir)
     with tempfile.TemporaryDirectory(prefix="ai-config-sync-") as tmpdir:
         repo_path = Path(tmpdir) / "repo"
-        LOGGER.info("Fetching configuration from %s", repo_url)
-        clone_repo(repo_url=repo_url, ref=ref, destination=repo_path)
-        plans = build_plan(repo_path, target)
+        LOGGER.info(
+            "Fetching configuration from %s (%s -> %s)",
+            repo_url,
+            branch,
+            remote_dir_path,
+        )
+        clone_repo(
+            repo_url=repo_url,
+            destination=repo_path,
+            branch=branch,
+            ref=ref,
+            depth=1,
+        )
+        source_root = repo_path / remote_dir_path
+        if not source_root.exists():
+            raise FileNotFoundError(
+                f"Remote directory '{remote_dir_path}' not found in repository. "
+                "Use 'ai-config push' to initialize it first."
+            )
+        plans = build_plan(source_root, target)
         for plan in plans:
             describe_plan(plan)
         if not any(plan.needs_change for plan in plans):
