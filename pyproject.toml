@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.0"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -10,14 +10,33 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = []
 authors = [
-  { name = "ai-coder-extends maintainers" }
+  { name = "ai-coder-extends maintainers", email = "maintainers@example.com" }
 ]
 keywords = ["ai", "ide", "config", "claude", "code-cursor"]
 classifiers = [
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
   "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent"
+  "Operating System :: OS Independent",
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Utilities"
 ]
+
+[project.urls]
+Homepage = "https://github.com/xkcyy/ai-coder-extends"
+Repository = "https://github.com/xkcyy/ai-coder-extends"
+Issues = "https://github.com/xkcyy/ai-coder-extends/issues"
 
 [project.scripts]
 ai-config = "ai_config_tool.cli:main"
+
+[tool.setuptools]
+packages = ["ai_config_tool"]
+
+[tool.setuptools.package-data]
+ai_config_tool = ["*.py"]

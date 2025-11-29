@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(py -3 -m pip install:*)",
+      "Bash(py -3 setup.py develop:*)",
+      "Bash(py -3:*)",
+      "Bash(ai-config:*)",
+      "Bash(ai-config.bat:*)",
+      "Bash(\"C:\\Users\\xkcyy\\AppData\\Local\\Programs\\Python\\Python39\\Scripts\\ai-config.bat\":*)",
+      "Bash(dir:*)",
+      "Bash(./ai-config.bat:*)",
+      "Bash(cmd:*)",
+      "Bash(copy:*)",
+      "Bash($env:PATH -split ';')",
+      "Bash(powershell:*)",
+      "Bash(\"C:\\Users\\xkcyy\\AppData\\Local\\Programs\\Python\\Python39\\Scripts\\ai-config.bat\" --help)",
+      "Bash(echo:*)",
+      "Bash(Where-Object { $_ -match 'Python' -and $_ -match 'Scripts' })",
+      "Bash(npm install:*)",
+      "Bash(npm run build)",
+      "Bash(node:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(chmod:*)",
+      "Bash(./setup-local.sh:*)",
+      "Bash(./install-nodejs.sh:*)",
+      "Bash(./install-nodejs-v2.sh:*)",
+      "Bash(./install-nodejs-final.sh:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
