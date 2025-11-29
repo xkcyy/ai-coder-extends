@@ -29,7 +29,8 @@
       "Bash(./install-nodejs-v2.sh:*)",
       "Bash(./install-nodejs-final.sh:*)",
       "Bash(rm:*)",
-      "Bash(npm pack)"
+      "Bash(npm pack)",
+      "Bash(git fetch:*)"
     ],
     "deny": [],
     "ask": []
