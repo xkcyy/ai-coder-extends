@@ -98,6 +98,57 @@ rollbackCmd
         process.exit(1);
     }
 });
+// Pull command
+const pullCmd = program
+    .command('pull')
+    .description('Synchronize .cursor/.claude from remote repository to local')
+    .option('--repo <url>', 'Remote repository URL', constants_1.DEFAULT_REPO_URL)
+    .option('--branch <branch>', 'Remote branch to read from', constants_1.DEFAULT_BRANCH)
+    .option('--ref <ref>', 'Optional git ref (branch, tag, or commit) to pull')
+    .option('--remote-dir <dir>', 'Directory inside remote repo storing configs', constants_1.DEFAULT_REMOTE_DIR)
+    .option('--target <path>', 'Target project path', process.cwd())
+    .option('--dry-run', 'Show planned changes without writing files', false)
+    .option('--force', 'Bypass dirty git tree check for target directories', false)
+    .option('--verbose', 'Enable verbose logging', false)
+    .action(async (options) => {
+    try {
+        if (options.verbose) {
+            process.env.DEBUG = 'true';
+        }
+        await (0, sync_1.runSync)({
+            target: (0, path_1.resolve)(options.target),
+            repoUrl: options.repo,
+            ref: options.ref,
+            dryRun: options.dryRun,
+            force: options.force,
+            remoteDir: options.remoteDir,
+            branch: options.branch
+        });
+    }
+    catch (error) {
+        console.error('Pull failed:', error.message);
+        process.exit(1);
+    }
+});
+// Rollback command
+const rollbackCmd = program
+    .command('rollback <timestamp>')
+    .description('Restore .cursor/.claude from a previous backup')
+    .option('--target <path>', 'Target project path', process.cwd())
+    .option('--verbose', 'Enable verbose logging', false)
+    .action(async (timestamp, options) => {
+    try {
+        if (options.verbose) {
+            process.env.DEBUG = 'true';
+        }
+        const backupPath = await (0, backup_1.rollbackSnapshot)((0, path_1.resolve)(options.target), timestamp, Array.from(constants_1.SUPPORTED_DIRECTORIES));
+        console.log(`Restored backup from ${backupPath}`);
+    }
+    catch (error) {
+        console.error('Rollback failed:', error.message);
+        process.exit(1);
+    }
+});
 // Parse command line arguments
 program.parse();
 //# sourceMappingURL=cli.js.map

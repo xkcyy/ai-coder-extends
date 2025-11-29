@@ -112,5 +112,63 @@ rollbackCmd
     }
   });
 
+// Pull command
+const pullCmd = program
+  .command('pull')
+  .description('Synchronize .cursor/.claude from remote repository to local')
+  .option('--repo <url>', 'Remote repository URL', DEFAULT_REPO_URL)
+  .option('--branch <branch>', 'Remote branch to read from', DEFAULT_BRANCH)
+  .option('--ref <ref>', 'Optional git ref (branch, tag, or commit) to pull')
+  .option('--remote-dir <dir>', 'Directory inside remote repo storing configs', DEFAULT_REMOTE_DIR)
+  .option('--target <path>', 'Target project path', process.cwd())
+  .option('--dry-run', 'Show planned changes without writing files', false)
+  .option('--force', 'Bypass dirty git tree check for target directories', false)
+  .option('--verbose', 'Enable verbose logging', false)
+  .action(async (options) => {
+    try {
+      if (options.verbose) {
+        process.env.DEBUG = 'true';
+      }
+
+      await runSync({
+        target: resolve(options.target),
+        repoUrl: options.repo,
+        ref: options.ref,
+        dryRun: options.dryRun,
+        force: options.force,
+        remoteDir: options.remoteDir,
+        branch: options.branch
+      });
+    } catch (error: any) {
+      console.error('Pull failed:', error.message);
+      process.exit(1);
+    }
+  });
+
+// Rollback command
+const rollbackCmd = program
+  .command('rollback <timestamp>')
+  .description('Restore .cursor/.claude from a previous backup')
+  .option('--target <path>', 'Target project path', process.cwd())
+  .option('--verbose', 'Enable verbose logging', false)
+  .action(async (timestamp, options) => {
+    try {
+      if (options.verbose) {
+        process.env.DEBUG = 'true';
+      }
+
+      const backupPath = await rollbackSnapshot(
+        resolve(options.target),
+        timestamp,
+        Array.from(SUPPORTED_DIRECTORIES)
+      );
+
+      console.log(`Restored backup from ${backupPath}`);
+    } catch (error: any) {
+      console.error('Rollback failed:', error.message);
+      process.exit(1);
+    }
+  });
+
 // Parse command line arguments
 program.parse();
