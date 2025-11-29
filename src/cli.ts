@@ -22,9 +22,7 @@ program
 // Sync command
 const syncCmd = program
   .command('sync')
-  .description('Synchronize .cursor/.claude from remote repository');
-
-syncCmd
+  .description('Synchronize .cursor/.claude from remote repository')
   .option('--repo <url>', 'Remote repository URL', DEFAULT_REPO_URL)
   .option('--branch <branch>', 'Remote branch to read from', DEFAULT_BRANCH)
   .option('--ref <ref>', 'Optional git ref (branch, tag, or commit) to sync')
@@ -57,9 +55,7 @@ syncCmd
 // Push command
 const pushCmd = program
   .command('push')
-  .description('Push local .cursor/.claude to the remote repository');
-
-pushCmd
+  .description('Push local .cursor/.claude to the remote repository')
   .option('--repo <url>', 'Remote repository URL', DEFAULT_REPO_URL)
   .option('--branch <branch>', 'Remote branch to push to', DEFAULT_BRANCH)
   .option('--remote-dir <dir>', 'Directory inside remote repo storing configs', DEFAULT_REMOTE_DIR)
@@ -81,33 +77,6 @@ pushCmd
       });
     } catch (error: any) {
       console.error('Push failed:', error.message);
-      process.exit(1);
-    }
-  });
-
-// Rollback command
-const rollbackCmd = program
-  .command('rollback <timestamp>')
-  .description('Restore .cursor/.claude from a previous backup');
-
-rollbackCmd
-  .option('--target <path>', 'Target project path', process.cwd())
-  .option('--verbose', 'Enable verbose logging', false)
-  .action(async (timestamp, options) => {
-    try {
-      if (options.verbose) {
-        process.env.DEBUG = 'true';
-      }
-
-      const backupPath = await rollbackSnapshot(
-        resolve(options.target),
-        timestamp,
-        Array.from(SUPPORTED_DIRECTORIES)
-      );
-
-      console.log(`Restored backup from ${backupPath}`);
-    } catch (error: any) {
-      console.error('Rollback failed:', error.message);
       process.exit(1);
     }
   });
