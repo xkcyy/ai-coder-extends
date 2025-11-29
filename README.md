@@ -36,28 +36,30 @@ Linux / macOS：
 ./ai-config push --message "chore: sync"
 ```
 
-### 安装方式（无需 `py` 前缀）
+### 安装方式
 
-#### ✅ 推荐方案：一行命令安装
+#### ✅ Node.js 版本（推荐）
 
-无需手动下载，只需执行一条 `pipx` 或 `pip` 命令即可把 `ai-config` 装进 PATH：
+```bash
+# 全局安装
+npm install -g git+https://github.com/xkcyy/ai-coder-extends.git
 
-- **Linux / macOS**
-  ```bash
-  pipx install git+https://github.com/xkcyy/ai-coder-extends.git
-  # 若未安装 pipx，可使用：
-  python3 -m pip install --user git+https://github.com/xkcyy/ai-coder-extends.git
-  ai-config --help
-  ```
-- **Windows（PowerShell）**
-  ```powershell
-  pipx install git+https://github.com/xkcyy/ai-coder-extends.git
-  # 或者
-  py -3 -m pip install --user git+https://github.com/xkcyy/ai-coder-extends.git
-  ai-config --help
-  ```
+# 测试安装
+ai-config --help
+```
 
-> `pipx` 会自动创建隔离环境并把入口脚本写入 PATH；若使用 `pip install --user`，请确保 `%USERPROFILE%\AppData\Roaming\Python\Python311\Scripts`（路径随 Python 版本变化）已加入 PATH。
+#### 🐍 Python 版本
+
+```bash
+# 使用 pipx（推荐）
+pipx install git+https://github.com/xkcyy/ai-coder-extends.git
+
+# 或者使用 pip
+python3 -m pip install --user git+https://github.com/xkcyy/ai-coder-extends.git
+
+# 测试安装
+ai-config --help
+```
 
 #### 🛠 手动方式（离线/内网）
 

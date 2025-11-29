@@ -27,7 +27,9 @@
       "Bash(./setup-local.sh:*)",
       "Bash(./install-nodejs.sh:*)",
       "Bash(./install-nodejs-v2.sh:*)",
-      "Bash(./install-nodejs-final.sh:*)"
+      "Bash(./install-nodejs-final.sh:*)",
+      "Bash(rm:*)",
+      "Bash(npm pack)"
     ],
     "deny": [],
     "ask": []
