@@ -5,7 +5,13 @@
       "Bash(rm:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(ai-config:*)",
+      "Bash(dir \"C:\\Users\\xkcyy\\AppData\\Roaming\\npm\\node_modules\\ai-config\")",
+      "Bash(npm ls:*)",
+      "Bash(npm cache clean:*)"
     ],
     "deny": [],
     "ask": []
