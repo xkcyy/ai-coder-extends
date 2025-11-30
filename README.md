@@ -1,137 +1,283 @@
-# ai-coder-extends
+# AI 配置同步工具
 
-## AI 配置同步 & 推送工具
+强大的 Node.js 命令行工具，用于在本地项目和远程仓库之间同步 AI IDE 配置目录（Cursor、Claude）。让您的 AI 编程助手在所有项目中保持一致的配置。
 
-`ai-config` 命令行工具负责将本地 `.cursor`、`.claude` 目录与 **GitHub 仓库 `https://github.com/xkcyy/ai-coder-extends.git` 的 `remote-config/ai/` 目录** 保持一致：
+## ✨ 主要功能
 
-- `sync`：从 `origin/main` 拉取最新 Claude / Code Cursor 配置到当前工程；
-- `push`：将当前工程的配置直接提交并推送到远程主分支；
-- `rollback`：从 `.ai-config-backup/<timestamp>` 恢复本地配置。
+- **同步**：从远程仓库拉取 `.cursor` 和 `.claude` 配置
+- **推送**：将本地配置上传到远程仓库
+- **备份与回滚**：自动创建带时间戳的备份，支持回滚
+- **预览模式**：在应用更改前预览所有操作
+- **多 IDE 支持**：支持 Cursor、Claude 等 AI IDE
+- **TypeScript**：完整的类型安全和现代异步编程模式
+- **跨平台**：支持 Windows、macOS 和 Linux
 
-两条命令均通过 Git 完成，兼容 Windows、macOS、Linux（只需 Git ≥2.30 + Python ≥3.9）。
+## 📦 安装
 
-### 快速开始
-
-Windows PowerShell / CMD：
-```powershell
-# 查看帮助
-py -3 ai-config --help
-
-# 在当前项目预览同步差异
-py -3 ai-config sync --dry-run
-
-# 将本地配置推送到 GitHub main 分支
-py -3 ai-config push --message "chore: sync"
-```
-
-Linux / macOS：
-```bash
-# 查看帮助
-./ai-config --help
-
-# 默认从 main 分支同步 remote-config/ai/.cursor|.claude
-./ai-config sync
-
-# 推送本地配置
-./ai-config push --message "chore: sync"
-```
-
-### 安装方式
-
-#### ✅ Node.js 版本（推荐）
+### 全局安装（推荐）
 
 ```bash
-# 全局安装
-npm install -g git+https://github.com/xkcyy/ai-coder-extends.git
+npm install -g https://github.com/xkcyy/ai-coder-extends.git
+```
 
-# 测试安装
+## 🛠️ 使用方法
+
+### 基本命令
+
+```bash
+# 显示帮助信息
 ai-config --help
-```
 
-#### 🐍 Python 版本
+# 预览模式同步配置（不会实际修改文件）
+ai-config sync --dry-run
 
-```bash
-# 使用 pipx（推荐）
-pipx install git+https://github.com/xkcyy/ai-coder-extends.git
+# 同步配置到本地
+ai-config sync
 
-# 或者使用 pip
-python3 -m pip install --user git+https://github.com/xkcyy/ai-coder-extends.git
-
-# 测试安装
-ai-config --help
-```
-
-#### 🛠 手动方式（离线/内网）
-
-在无法联网时，可将仓库里的 `ai-config` 脚本手动加入 PATH：
-
-- **Linux / macOS**
-  ```bash
-  chmod +x /path/to/repo/ai-config
-  mkdir -p ~/.local/bin
-  ln -sf /path/to/repo/ai-config ~/.local/bin/ai-config
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc  # 首次添加 PATH
-  source ~/.bashrc
-  ai-config --help
-  ```
-- **Windows（PowerShell）**
-  ```powershell
-  New-Item -ItemType Directory -Force "$env:USERPROFILE\bin"
-  Copy-Item -Force C:\path\to\repo\ai-config $env:USERPROFILE\bin\ai-config.py
-  Set-Content -Path $env:USERPROFILE\bin\ai-config.cmd -Value "@echo off`r`npy -3 %USERPROFILE%\bin\ai-config.py %*"
-  setx PATH "$env:USERPROFILE\bin;%PATH%"
-  ai-config --help
-  ```
-  `.cmd` 包装器会自动调用 Python 启动器，因此日常直接输入 `ai-config` 即可。
-
-
-### 常用命令
-
-```bash
-# 干运行，显示新增/修改/删除文件
-ai-config sync --dry-run --verbose
-
-# 指定远程仓库 / 分支 / 目录（默认 remote-config/ai）
-ai-config sync --repo https://github.com/xkcyy/ai-coder-extends.git \
-                --branch main \
-                --remote-dir remote-config/ai
-
-# 忽略本地未提交改动
+# 强制同步（忽略工作区检查）
 ai-config sync --force
 
-# 推送本地配置到主分支指定目录
-ai-config push --remote-dir remote-config/ai --branch main
+# 推送本地配置到远程仓库
+ai-config push --message "更新 AI 配置"
 
-# 自定义提交信息
-ai-config push --message "feat: update claude commands"
-
-# 回滚到某次备份（同步命令前自动创建）
-ai-config rollback 20251127-103000
+# 回滚到指定时间戳的备份
+ai-config rollback 20241130-143000
 ```
 
-### 工作流与说明
-- **默认远程**：`https://github.com/xkcyy/ai-coder-extends.git` 的 `remote-config/ai/`（可用 `--remote-dir` 覆盖）。
-- **同步（sync）**：
-  - 克隆远程仓库指定分支（默认 `main`）→ 读取 `remote-config/ai/.cursor/.claude` → 计算差异 → 可选 `--dry-run` → 自动备份 → 镜像覆盖本地。
-  - 若远程目录不存在，会提示先执行 `ai-config push` 初始化。
-- **推送（push）**：
-  - 克隆远程仓库 → 用本地 `.cursor`、`.claude` 全量覆盖 `remote-config/ai/` → 若检测到变化则自动 `git commit` + `git push origin <branch>`。
-  - 需要本机 Git 已配置 `user.name`/`user.email` 且具备推送权限（HTTPS/SSH 任意）。
-- **备份与回滚**：每次成功写入前会把本地配置保存到 `.ai-config-backup/<timestamp>/`，可使用 `rollback` 命令恢复。
-- **Windows 注意**：
-  - 建议使用 `py -3 ai-config <command>`（Python 启动器会自动定位版本）。
-  - 若遇到权限提示，请在具有写入权限的项目目录运行命令。
+### 高级选项
 
-### 参数速览
-- `--repo`：远程仓库地址（默认指向 GitHub 主仓库）。
-- `--branch`：同步或推送的远程分支，默认 `main`。
-- `--remote-dir`：仓库内存放配置的目录，默认 `remote-config/ai`。
-- `--target`：本地项目根目录（默认为当前目录）。
-- `--message`：推送时的提交信息。
-- `--dry-run` / `--force` / `--verbose`：控制同步行为、输出和安全策略。
+```bash
+# 从自定义仓库和分支同步
+ai-config sync \
+  --repo https://github.com/user/my-ai-configs.git \
+  --branch main \
+  --remote-dir configs/ai
 
-### 认证与故障排查
-- 确保本机 Git 凭据可以直接 `git clone`、`git push` 目标仓库；若使用 HTTPS 可配合凭据管理器。
-- `sync` 若提示 “Remote directory not found”，说明远程尚未初始化配置，需先执行 `ai-config push`。
-- `push` 若显示 `non-fast-forward`，请先执行 `ai-config sync` 获取最新配置，再次推送。
-- 每次同步或推送都会输出日志，可搭配 `--verbose` 查看完整 Git 命令执行情况。
+# 同步指定的 Git 版本（标签、提交等）
+ai-config sync --ref v1.0.0
+
+# 指定项目目录
+ai-config sync --target /path/to/my/project
+
+# 启用详细日志输出
+ai-config sync --verbose
+```
+
+## 📁 支持的目录
+
+- `.cursor/` - Cursor IDE 配置目录
+- `.claude/` - Claude AI 配置目录
+
+## ⚙️ 配置选项
+
+### 默认设置
+- **仓库地址**: `https://github.com/xkcyy/ai-coder-extends.git`
+- **分支**: `main`
+- **远程目录**: `remote-config/ai`
+- **目标路径**: 当前工作目录
+
+### 环境变量
+- `DEBUG=true` - 启用详细日志输出
+
+## 🏗️ 项目结构
+
+```
+src/
+├── cli.ts          # CLI 入口点和命令定义
+├── sync.ts         # 同步功能实现
+├── push.ts         # 推送功能实现
+├── backup.ts       # 备份和回滚操作
+├── git-utils.ts    # Git 操作封装
+├── utils.ts        # 工具函数
+├── constants.ts    # 应用常量
+├── types.ts        # TypeScript 类型定义
+└── index.ts        # 库导出
+
+dist/               # 编译后的 JavaScript 文件
+package.json        # 项目配置
+tsconfig.json       # TypeScript 配置
+LICENSE             # MIT 许可证
+```
+
+## 🚦 命令参考
+
+### `sync`
+从远程仓库同步配置到本地项目。
+
+```bash
+ai-config sync [选项]
+```
+
+**选项:**
+- `--repo <url>` - 远程仓库地址
+- `--branch <branch>` - 远程分支名称（默认：main）
+- `--ref <ref>` - Git 版本引用（分支、标签或提交）
+- `--remote-dir <dir>` - 远程仓库中包含配置的目录
+- `--target <path>` - 目标项目路径（默认：当前目录）
+- `--dry-run` - 显示更改但不实际应用
+- `--force` - 跳过工作区检查
+- `--verbose` - 启用详细日志
+
+### `push`
+将本地配置推送到远程仓库。
+
+```bash
+ai-config push [选项]
+```
+
+**选项:**
+- `--repo <url>` - 远程仓库地址
+- `--branch <branch>` - 目标分支（默认：main）
+- `--remote-dir <dir>` - 远程仓库中存放配置的目录
+- `--target <path>` - 要推送的项目路径（默认：当前目录）
+- `--message <msg>` - 提交信息（默认："chore: sync ai IDE config"）
+- `--verbose` - 启用详细日志
+
+### `rollback`
+从之前的备份恢复配置。
+
+```bash
+ai-config rollback <时间戳> [选项]
+```
+
+**参数:**
+- `时间戳` - 备份时间戳（格式：YYYYMMDD-HHMMSS）
+
+**选项:**
+- `--target <path>` - 目标项目路径（默认：当前目录）
+- `--verbose` - 启用详细日志
+
+## 🔒 安全特性
+
+### 备份系统
+- 在任何更改前自动创建带时间戳的备份
+- 支持回滚到任何之前的备份状态
+- 备份存储在 `.ai-config-backup/` 目录中
+
+### Git 安全检查
+- 操作前检查工作区状态
+- 需要明确的 `--force` 标志来跳过安全检查
+- 保护现有的 Git 历史和配置
+
+### 预览模式
+- 在应用更改前预览所有计划的操作
+- 精确显示将要创建、修改或删除的文件
+- 安全地测试配置变更
+
+## 🐳 Docker 支持
+
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY dist/ ./dist/
+RUN npm install -g .
+ENTRYPOINT ["ai-config"]
+```
+
+## 🧪 开发
+
+### 脚本命令
+```bash
+# 构建项目
+npm run build
+
+# 开发模式运行
+npm run dev sync --dry-run
+
+# 启动 CLI
+npm start
+
+# 运行测试
+npm test
+```
+
+### 贡献指南
+1. Fork 本仓库
+2. 创建功能分支：`git checkout -b feature/amazing-feature`
+3. 提交您的更改：`git commit -m 'Add amazing feature'`
+4. 推送到分支：`git push origin feature/amazing-feature`
+5. 创建 Pull Request
+
+## 🔧 依赖项
+
+### 运行时依赖
+- **commander** (`^11.1.0`) - CLI 框架
+- **simple-git** (`^3.20.0`) - Git 操作封装
+- **date-fns** (`^2.30.0`) - 日期处理工具
+
+### 开发依赖
+- **typescript** (`^5.3.0`) - TypeScript 编译器
+- **ts-node** (`^10.9.1`) - TypeScript 执行器
+- **@types/node** (`^20.10.0`) - Node.js 类型定义
+
+## 📋 系统要求
+
+- **Node.js** >= 16.0.0
+- **Git** 已配置并具有必要权限
+- 对目标目录的**写入权限**
+- 对远程仓库的**网络访问权限**
+
+## 🚨 故障排除
+
+### 常见问题
+
+1. **Git 权限错误**
+   ```bash
+   # 检查 Git 配置
+   git config --list
+
+   # 确保身份验证正确
+   git config --global credential.helper
+   ```
+
+2. **工作区未清理**
+   ```bash
+   # 检查 Git 状态
+   git status
+
+   # 暂存或提交更改
+   git stash
+   # 或使用 --force 标志（不推荐）
+   ```
+
+3. **Node.js 版本**
+   ```bash
+   # 检查 Node.js 版本
+   node --version  # 应该 >= 16.0.0
+   ```
+
+4. **网络问题**
+   ```bash
+   # 测试仓库访问
+   git ls-remote https://github.com/xkcyy/ai-coder-extends.git
+   ```
+
+### 调试模式
+启用详细日志进行故障排除：
+```bash
+ai-config sync --verbose
+# 或
+DEBUG=true ai-config sync
+```
+
+## 📄 许可证
+
+本项目采用 MIT 许可证 - 详情请参阅 [LICENSE](LICENSE) 文件。
+
+## 🤝 致谢
+
+- 使用现代 TypeScript 和 Node.js 最佳实践构建
+- 源于跨项目保持 AI IDE 配置一致性的需求
+- 感谢开源社区提供让这一切成为可能的优秀工具
+
+## 📞 技术支持
+
+- **问题反馈**: [GitHub Issues](https://github.com/xkcyy/ai-coder-extends/issues)
+- **项目仓库**: [https://github.com/xkcyy/ai-coder-extends](https://github.com/xkcyy/ai-coder-extends)
+- **文档**: [项目 Wiki](https://github.com/xkcyy/ai-coder-extends/wiki)
+
+---
+
+**让您的 AI 编程助手在所有项目中保持同步！🚀**
