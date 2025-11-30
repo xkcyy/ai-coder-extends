@@ -14,10 +14,31 @@
 
 ## 📦 安装
 
-### 全局安装（推荐）
+### 方法一：全局安装（推荐）
 
 ```bash
 npm install -g https://github.com/xkcyy/ai-coder-extends.git
+```
+
+### 方法二：从源码安装
+
+如果 GitHub 安装遇到问题，可以直接从源码安装：
+
+```bash
+git clone https://github.com/xkcyy/ai-coder-extends.git
+cd ai-coder-extends
+npm run build
+npm install -g .
+```
+
+### 方法三：本地目录安装
+
+如果您已经下载了源码：
+
+```bash
+cd /path/to/ai-coder-extends
+npm run build
+npm install -g .
 ```
 
 ## 🛠️ 使用方法
