@@ -28,8 +28,13 @@ Thumbs.db
 # Backup directories
 .ai-config-backup/
 
-# Remote config cache
-remote-config/
+# Remote config cache (keep empty structure for npm)
+remote-config/*
+!remote-config/ai/
+!remote-config/ai/.claude/
+!remote-config/ai/.cursor/
+!remote-config/ai/.claude/.gitkeep
+!remote-config/ai/.cursor/.gitkeep
 
 # Temporary files
 *.tmp
